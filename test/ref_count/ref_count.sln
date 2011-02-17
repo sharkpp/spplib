@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ref_count", "ref_count.vcproj", "{0F4AE242-A198-458A-85A0-4A411AD01D61}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0F4AE242-A198-458A-85A0-4A411AD01D61}.Debug|Win32.ActiveCfg = Debug|Win32
+		{0F4AE242-A198-458A-85A0-4A411AD01D61}.Debug|Win32.Build.0 = Debug|Win32
+		{0F4AE242-A198-458A-85A0-4A411AD01D61}.Release|Win32.ActiveCfg = Release|Win32
+		{0F4AE242-A198-458A-85A0-4A411AD01D61}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

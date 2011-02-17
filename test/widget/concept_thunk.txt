@@ -1,0 +1,163 @@
+Windowsプログラムでゲームを作りたい。
+79 名前： 13の書換 投稿日： 2000/06/04(日) 03:11
+Win クラスらしきものを作ってるのに、肝心のWinProcが継承出来ないから
+WinProc側の課題が出ないのだと思う。　という事で、WinProcをVirtualにしてみた
+
+struct Win{
+ HWND hwnd;
+ HDC  hdc;
+ int  kcode;
+ static Win * callbackSelf;
+ WNDPROC cb; //ｻﾝｸﾎﾟｲﾝﾀ
+virtual LRESULT WndProc(HWND hw,UINT uMsg,WPARAM wParam,LPARAM lParam)
+ { switch(uMsg){
+  case WM_PAINT: { PAINTSTRUCT ps;HDC hdc= BeginPaint(hw,&ps);
+    TextOut(hdc,0,0,"再描画ｼﾏｼﾀ",14);
+    EndPaint(hw,&ps);
+    } return 0;
+  case WM_DESTROY: PostQuitMessage(0);
+  return 0;
+  }
+  return DefWindowProc(hw, uMsg, wParam, lParam);
+ }
+
+static LRESULT CALLBACK WndProcGate(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+  { return callbackSelf->WndProc(hwnd,uMsg,wParam,lParam);  }
+
+void makeClass(char *WinClassName)
+{   cb=(WNDPROC)VirtualAlloc(NULL,10+5 , MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+  char *b=(char*)cb;            //ｺｰﾙﾊﾞｯｸｹﾞｰﾄｦｺｼﾗｴﾙ
+    *b++= 0xC7; *b++= 0x05;       //MOV [adr],xxxx
+    *((int *)b)++=(int)(&callbackSelf); //ﾒﾓﾘｱﾄﾞﾚｽ
+    *((int *)b)++=(int)this;       //ｵﾌﾞｼﾞｪｸﾄｱﾄﾞﾚｽ
+    *b++= 0xE9;             //jump long xxxx
+    *((int *)b)= ((int)WndProcGate)-(4+(int)b);//ｼﾞｬﾝﾌﾟ先
+ WNDCLASS wndclass= { 0/*CS_SAVEBITS*/ ,//UINT  style;
+            cb,   //WNDPROC lpfnWndProc;
+            0,0,     //int   cbClsExtra,cbWndExtra;
+            0,               //HANDLE hInstance;
+            LoadIcon(NULL,IDI_APPLICATION),//HICON  hIcon;
+            LoadCursor(NULL,IDC_ARROW),  //HCURSOR hCursor;
+    (HBRUSH)    GetStockObject(WHITE_BRUSH),  //HBRUSH hbrBackground;
+            NULL,             //LPCTSTR lpszMenuName;
+            WinClassName, };        //LPCTSTR lpszClassName;
+  RegisterClass( &wndclass );
+}
+void beginWin(char *WinClassName,int xs,int ys,int xsz,int ysz)
+ {
+ kcode=-1;
+  HINSTANCE hinst = 0;
+  hwnd=CreateWindow(WinClassName,"testWindow",WS_POPUPWINDOW,xs,ys,xsz,ysz
+           , NULL , NULL , hinst , NULL);
+  ShowWindow( hwnd , SW_SHOWNORMAL );
+  UpdateWindow(hwnd);
+  hdc  =GetDC( hwnd );
+ }
+void init(){hdc=0;hwnd=0;cb=0;}
+ Win(void){init();};
+ Win(int xs,int ys,int xsz,int ysz)
+  { init();makeClass(“sample1");
+   beginWin( “sample1",xs,ys,xsz,ysz); }
+
+ ~Win()
+ {if(hdc) ReleaseDC( hwnd, hdc );
+  if(hwnd) DestroyWindow( hwnd );
+  if(cb)  VirtualFree(cb, 0,MEM_RELEASE);
+ }
+int kbhit()
+ { MSG msg;
+   if(PeekMessage(&msg , (HWND)NULL , 0, 0,PM_REMOVE) )
+    {  TranslateMessage(&msg);
+      if(msg.message==WM_CHAR)
+       { kcode=0xff &((TCHAR)msg.wParam); }
+      DispatchMessage(&msg);
+    }
+  if(kcode<0) return ::kbhit() ;
+   else   return 1;
+ }
+int getKB()
+ {
+  while(!kbhit());
+  if(kcode>=0){int k=kcode;kcode=-1;return k;};
+  return getch();
+ }
+};
+Win *Win::callbackSelf;
+
+80 名前： 79 投稿日： 2000/06/04(日) 03:15
+MFCでは hWndからハッシュテーブルを検索してWinProcコールバックから
+該当するクラスを検索してるみたいだが、79の方法は、Delphiとかで使っているサンク方式だ
+（この板で知った方法なのだが、過去ログはみつからない）
+
+81 名前： ＞80 投稿日： 2000/06/04(日) 04:01
+ATLだと構造体つかってやってるけど、それも同じだね。
+でもこの方法だとx86(ATLはAlphaもサポート)でしか動かないんだよね。
+
+
+87 名前： 79 投稿日： 2000/06/06(火) 19:50
+折角なので、継承してみた。　これで上に他の窓が重なっても大丈夫・・・
+struct GDIBMPWin:Win
+{
+ HDC  winhdc;
+ HBITMAP hBitmap;
+  cls(void){RECT r;GetClientRect(hwnd,&r);
+      InvalidateRect(hwnd, NULL,FALSE);
+      return FillRect(hdc,&r,(HBRUSH)GetStockObject(WHITE_BRUSH));
+      }
+GDIBMPWin(int xs,int ys,int xsz,int ysz): Win()
+  { makeClass(“className2");
+   beginWin( “className2",xs,ys,xsz,ysz);
+   winhdc=hdc;//画面用DCﾊ保存ｼﾃｵｲﾃ
+   hdc = CreateCompatibleDC(winhdc );
+   hBitmap=CreateCompatibleBitmap(winhdc, xsz,ysz);
+   SelectObject(hdc,hBitmap);
+   cls();
+  }
+ ~GDIBMPWin()
+ {
+  if(hdc) DeleteDC( hdc );
+  if(hBitmap)DeleteObject(hBitmap);
+   hdc=winhdc;
+ }
+LRESULT WndProc(HWND hw,UINT uMsg,WPARAM wParam,LPARAM lParam)
+ {switch(uMsg){
+   case WM_PAINT: { PAINTSTRUCT ps;HDC ndc= BeginPaint(hw,&ps);
+   RECT Client;
+   GetClientRect( hw, &Client );
+   BitBlt( ndc,    Client.left,         Client.top,
+    (Client.right - Client.left),(Client.bottom - Client.top), hdc,
+     Client.left,         Client.top,     SRCCOPY );
+   EndPaint(hw,&ps);
+   } return 0;
+  case WM_DESTROY: PostQuitMessage(0);
+  return 0;
+  } return DefWindowProc(hw, uMsg, wParam, lParam);
+ }
+int getKB() //画面ｦﾘﾌﾚｯｼｭｻｾﾙ為ﾆ継承ｽﾙ
+ {
+  InvalidateRect(hwnd, NULL,FALSE);
+  return Win::getKB();
+ }
+};
+
+
+88 名前： 79 投稿日： 2000/06/06(火) 19:55
+87のコードを追加して
+今までの Win w(10,10,100,100); ->GDIBMPWin w(10,10,100,100); に替える
+GDIビットマップを使って　一旦バッファ上に描画し、WinProcで画面を書換えている
+
+だから、実際に表示されるタイミングを考慮して書換える事
+例：
+case ‘T’: //３角形を表示するサンプル
+　 {
+　　 for(double d=0;d<2*M_PI;d+=0.03)
+　　 { POINT pt[3]={{0,0},{30,30},{-30,30}},wk[3];
+　　　 double s=sin(-d),c=cos(-d);
+　　　 for(int i=0;i<3;i++){wk[i].x=pt[i].x*c+pt[i].y*s+50;wk[i].y=pt[i].y*c-pt[i].x*s+50;}
+　　　 w.cls(); //画面バッファのクリア
+　　　 Polygon(w.hdc, wk, 3);//この行で三角形が表示出来る
+　　　 if( w.kbhit() )break; //ホントウに表示されるのはこのkbhit内
+　　　 Sleep(30);
+　　 }
+　 }break;
+” 

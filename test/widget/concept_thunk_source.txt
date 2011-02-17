@@ -1,0 +1,117 @@
+struct Win
+{
+	HWND hwnd;
+	HDC  hdc;
+	int  kcode;
+	static Win * callbackSelf;
+	WNDPROC cb; //ª›∏Œﬂ≤›¿
+
+virtual LRESULT WndProc(HWND hw,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	switch(uMsg)
+	{
+	case WM_PAINT: {
+			PAINTSTRUCT ps;HDC hdc= BeginPaint(hw,&ps);
+			TextOut(hdc,0,0,"çƒï`âÊºœº¿",14);
+			EndPaint(hw,&ps);
+		}
+		return 0;
+	case WM_DESTROY:
+		PostQuitMessage(0);
+		return 0;
+	}
+	return DefWindowProc(hw, uMsg, wParam, lParam);
+}
+
+static LRESULT CALLBACK WndProcGate(HWND hwnd,UINT uMsg,WPARAM wParam,LPARAM lParam)
+{
+	return callbackSelf->WndProc(hwnd,uMsg,wParam,lParam);
+}
+
+void makeClass(char *WinClassName)
+{
+	cb = (WNDPROC)VirtualAlloc(NULL,10+5 , MEM_COMMIT, PAGE_EXECUTE_READWRITE);
+	char *b=(char*)cb;					//∫∞Ÿ ﬁØ∏πﬁ∞ƒ¶∫º◊¥Ÿ
+	*b++= 0xC7; *b++= 0x05;				//MOV [adr],xxxx
+	*((int *)b)++=(int)(&callbackSelf);	//“”ÿ±ƒﬁ⁄Ω
+	*((int *)b)++=(int)this;			//µÃﬁºﬁ™∏ƒ±ƒﬁ⁄Ω
+	*b++= 0xE9;							//jump long xxxx
+	*((int *)b)= ((int)WndProcGate)-(4+(int)b);//ºﬁ¨›ÃﬂêÊ
+	WNDCLASS wndclass = {
+		0/*CS_SAVEBITS*/ ,//UINT  style;
+		cb,   //WNDPROC lpfnWndProc;
+		0,0,     //int   cbClsExtra,cbWndExtra;
+		0,               //HANDLE hInstance;
+		LoadIcon(NULL,IDI_APPLICATION),//HICON  hIcon;
+		LoadCursor(NULL,IDC_ARROW),  //HCURSOR hCursor;
+		(HBRUSH)GetStockObject(WHITE_BRUSH),  //HBRUSH hbrBackground;
+		NULL,             //LPCTSTR lpszMenuName;
+		WinClassName,
+	};        //LPCTSTR lpszClassName;
+	RegisterClass( &wndclass );
+}
+
+void beginWin(char *WinClassName,int xs,int ys,int xsz,int ysz)
+{
+	kcode=-1;
+	HINSTANCE hinst = 0;
+	hwnd=CreateWindow(WinClassName,"testWindow",WS_POPUPWINDOW,xs,ys,xsz,ysz, NULL , NULL , hinst , NULL);
+	ShowWindow( hwnd , SW_SHOWNORMAL );
+	UpdateWindow(hwnd);
+	hdc  =GetDC( hwnd );
+}
+
+void init()
+{
+	hdc=0;hwnd=0;cb=0;
+}
+
+Win(void)
+{
+	init();
+}
+
+Win(int xs,int ys,int xsz,int ysz)
+{
+	init();
+	makeClass("sample1");
+	beginWin("sample1",xs,ys,xsz,ysz);
+}
+
+~Win()
+{
+	if(hdc) ReleaseDC( hwnd, hdc );
+	if(hwnd) DestroyWindow( hwnd );
+	if(cb)  VirtualFree(cb, 0,MEM_RELEASE);
+}
+
+int kbhit()
+{
+	MSG msg;
+	if(PeekMessage(&msg , (HWND)NULL , 0, 0,PM_REMOVE) )
+	{
+		TranslateMessage(&msg);
+		if(msg.message==WM_CHAR)
+		{
+			kcode=0xff &((TCHAR)msg.wParam);
+		}
+		DispatchMessage(&msg);
+	}
+
+	if(kcode<0)
+		 return ::kbhit() ;
+	else return 1;
+}
+
+int getKB()
+{
+	while(!kbhit());
+	if(kcode>=0) {
+		int k=kcode;kcode=-1;return k;
+	}
+	return getch();
+}
+
+};
+
+Win *Win::callbackSelf;

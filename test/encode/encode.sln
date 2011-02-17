@@ -1,0 +1,20 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 10.00
+# Visual C++ Express 2008
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "encode", "encode.vcproj", "{B7A83CDE-4715-4ED2-8468-10498E4CF445}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{B7A83CDE-4715-4ED2-8468-10498E4CF445}.Debug|Win32.ActiveCfg = Debug|Win32
+		{B7A83CDE-4715-4ED2-8468-10498E4CF445}.Debug|Win32.Build.0 = Debug|Win32
+		{B7A83CDE-4715-4ED2-8468-10498E4CF445}.Release|Win32.ActiveCfg = Release|Win32
+		{B7A83CDE-4715-4ED2-8468-10498E4CF445}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

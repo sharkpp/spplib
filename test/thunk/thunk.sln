@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 10.00
 # Visual C++ Express 2008
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "thunk_generator", "thunk_generator.vcproj", "{45FFD8FD-35B7-41CB-8FB6-1D54528FE5CB}"
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "thunk", "thunk.vcproj", "{45FFD8FD-35B7-41CB-8FB6-1D54528FE5CB}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

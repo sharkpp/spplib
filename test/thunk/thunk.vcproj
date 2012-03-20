@@ -2,9 +2,9 @@
 <VisualStudioProject
 	ProjectType="Visual C++"
 	Version="9.00"
-	Name="thunk_generator"
+	Name="thunk"
 	ProjectGUID="{45FFD8FD-35B7-41CB-8FB6-1D54528FE5CB}"
-	RootNamespace="thunk_generator"
+	RootNamespace="thunk"
 	Keyword="Win32Proj"
 	TargetFrameworkVersion="196613"
 	>
@@ -391,7 +391,7 @@
 			Name="spplib"
 			>
 			<File
-				RelativePath="..\..\spplib\thunk_generator.hpp"
+				RelativePath="..\..\spplib\thunk.hpp"
 				>
 			</File>
 		</Filter>

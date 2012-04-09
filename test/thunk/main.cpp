@@ -47,6 +47,19 @@ public:
 	}
 };
 
+int test(int a)
+{
+	TRACE("%s : %d\n", __FUNCSIG__, a);
+	return a * 2;
+}
+
+__forceinline
+int /*__stdcall*/ test2(int a)
+{
+	TRACE("%s : %d\n", __FUNCSIG__, a);
+	return a * 2;
+}
+
 //template<typename T>
 //class foo
 //{
@@ -62,11 +75,7 @@ int _tmain(int argc, _TCHAR* argv[])
 {
 	SET_TRACE_OUTPUT_DBGOUT();
 
-//	foo<int>::fuga(10);
-
 	test1 v1(987);
-//	spplib::thunk_generator t1(&v1, &test1::run);
-//	(t1.get_code())(123);
 
 	spplib::thunk t0v(&v1, &test1::run0v);
 	spplib::thunk t0i(&v1, &test1::run0i);
@@ -105,6 +114,20 @@ int _tmain(int argc, _TCHAR* argv[])
 	TRACE("r=%d\n",r);
 
 	r = p1ct(x);
+	TRACE("r=%d\n",r);
+
+	TRACE("----------- code injection test -----------\n");
+
+	int (*test_)(int) = (int(*)(int))t1i.injection_code(test);
+	r = test(5);
+	TRACE("r=%d\n",r);
+	r = test_(5);
+	TRACE("r=%d\n",r);
+
+	int (*test2_)(int) = (int(*)(int))t1i.injection_code(test2);
+	r = test2(5);
+	TRACE("r=%d\n",r);
+	r = test2_(r);
 	TRACE("r=%d\n",r);
 
 	return 0;

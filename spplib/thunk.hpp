@@ -195,59 +195,63 @@ public:
 		u8* code_top = m_code;
 
 		DWORD op, op2;
-		// 関数フックのため一旦属性を書き込みできるようにする
-		::VirtualProtect(func, 5, PAGE_EXECUTE_READWRITE, &op);
 
 		// 次コード読み込み関数処理前に関数を割り込ます
 		u8* code = (u8*)func;
 
-		::VirtualProtect(m_code_top, 64, PAGE_EXECUTE_READWRITE, &op2);
+		::VirtualProtect(m_code_top, 256, PAGE_EXECUTE_READWRITE, &op);
 
 		u8* jmp_addr;
 
-		if( 0xE9 == *code ) // jmp XXXX
+		// 無条件 jmp や call の場合は飛び先に飛んでフック
+		while( 0xE9 == *code || 0xE8 == *code )
 		{
 			// 飛び先を計算
-			jmp_addr  = (u8*)((u32)code + *((u32*)(code+1)) + 5);
+			code  = (u8*)((u32)code + *((u32*)(code+1)) + 5);
 		}
-		else
-		{
-			size_t copy_len = 0;
 
-			// ジャンプコードを上書くために待避するサイズを取得
-			for(; copy_len < 5; ) {
-				size_t len = instructionLength_x86(code + copy_len);
-				if( !len ) {
-					// 改変検知のためページ属性を元に戻す
-					VirtualProtect(code, 5, op, &op);
-					return NULL;
-				}
-				copy_len += len;
+		size_t copy_len = 0;
+
+		// ジャンプコードを上書くために待避するサイズを取得
+		for(; copy_len < 5; ) {
+			size_t len = instructionLength_x86(code + copy_len);
+			if( !len ) {
+				return NULL;
 			}
-
-			// 待避
-			::memcpy(m_code, code, copy_len);
-			m_code += copy_len;
-
-			// 飛び先を計算
-			jmp_addr  = (u8*)((u32)code + copy_len);
+			copy_len += len;
 		}
+
+		// 待避
+		::memcpy(m_code, code, copy_len);
+		m_code += copy_len;
+
+		// 飛び先を計算
+		jmp_addr = (u8*)((u32)code + copy_len);
+
+		// 関数フックのため一旦属性を書き込みできるようにする
+		::VirtualProtect(code, 5, PAGE_EXECUTE_READWRITE, &op2);
+
+#ifdef _DEBUG
+		for(size_t i = 0; i < copy_len; i++) {
+			code[i] = 0xCD; // int3
+		}
+#endif
 
 		// フックする関数の先頭をフックルーチンへのジャンプに書き換える
 		*code++       = 0xE9; // jmp
-		*((u32*)code) = (u32)m_code - (u32)code - 4;
+		*((u32*)code) = (u32)m_code_top - (u32)code - 4;
 
 		// 改変検知のためページ属性を元に戻す
-		::VirtualProtect(func, 5, op, &op);
+		::VirtualProtect(code, 5, op2, &op2);
 
-		// 
+		// 元の関数位置へジャンプするコードを追加
 		*m_code++       = 0xE9; // jmp
 		*((u32*)m_code) = (u32)jmp_addr - (u32)m_code - 4; m_code += sizeof(u32);
 
 		// ページ属性を実行のみに変更
-		::VirtualProtect(m_code_top, DWORD(m_code - m_code_top), PAGE_EXECUTE, &op2);
+		::VirtualProtect(m_code_top, 256, PAGE_EXECUTE, &op);
 
-		return code_top;
+		return (void*)code_top;
 	}
 };
 

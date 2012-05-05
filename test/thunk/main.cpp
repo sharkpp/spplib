@@ -125,9 +125,23 @@ int _tmain(int argc, _TCHAR* argv[])
 	TRACE("r=%d\n",r);
 
 	int (*test2_)(int) = (int(*)(int))t1i.injection_code(test2);
-	r = test2(5);
+	r = test2(10);
 	TRACE("r=%d\n",r);
-	r = test2_(r);
+	r = test2_(10);
+	TRACE("r=%d\n",r);
+
+	TRACE("----------- code uninjection test -----------\n");
+
+	t1i.uninjection_code(test, test_);
+	r = test(5);
+	TRACE("r=%d\n",r);
+	r = test_(5);
+	TRACE("r=%d\n",r);
+
+	t1i.uninjection_code(test2, test2_);
+	r = test2(10);
+	TRACE("r=%d\n",r);
+	r = test2_(10);
 	TRACE("r=%d\n",r);
 
 	return 0;

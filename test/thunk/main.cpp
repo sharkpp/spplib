@@ -72,6 +72,19 @@ int __fastcall test4(int a)
 	return a * 4;
 }
 
+void test5sub()
+{
+	TRACE("%s\n", __FUNCSIG__);
+}
+
+__declspec(naked) void test5()
+{
+	__asm {
+        call test5sub;
+		ret;
+    }
+}
+
 //template<typename T>
 //class foo
 //{
@@ -154,6 +167,12 @@ int _tmain(int argc, _TCHAR* argv[])
 	r = test4_(10);
 	TRACE("test4_() r=%d\n",r);
 
+	void (*test5_)() = (void(*)())t0v.injection_code(test5);
+	test5();
+	TRACE("test5()\n");
+	test5_();
+	TRACE("test5_()\n");
+
 	TRACE("----------- code uninjection test -----------\n");
 
 	t1i.uninjection_code(test, test_);
@@ -168,17 +187,23 @@ int _tmain(int argc, _TCHAR* argv[])
 	r = test2_(10);
 	TRACE("test2_() r=%d\n",r);
 
-	//t1i.uninjection_code(test3, test3_);
-	//r = test3(10);
-	//TRACE("test3() r=%d\n",r);
-	//r = test3_(10);
-	//TRACE("test3_() r=%d\n",r);
+	t1i.uninjection_code(test3, test3_);
+	r = test3(10);
+	TRACE("test3() r=%d\n",r);
+	r = test3_(10);
+	TRACE("test3_() r=%d\n",r);
 
-	//t1i.uninjection_code(test4, test4_);
-	//r = test4(10);
-	//TRACE("test4() r=%d\n",r);
-	//r = test4_(10);
-	//TRACE("test4_() r=%d\n",r);
+	t1i.uninjection_code(test4, test4_);
+	r = test4(10);
+	TRACE("test4() r=%d\n",r);
+	r = test4_(10);
+	TRACE("test4_() r=%d\n",r);
+
+	t1i.uninjection_code(test5, test5_);
+	test5();
+	TRACE("test5()\n");
+	test5_();
+	TRACE("test5_()\n");
 
 	return 0;
 }

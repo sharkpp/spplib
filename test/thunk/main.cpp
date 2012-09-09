@@ -60,6 +60,18 @@ int /*__stdcall*/ test2(int a)
 	return a * 2;
 }
 
+int __stdcall test3(int a)
+{
+	TRACE("%s : %d\n", __FUNCSIG__, a);
+	return a * 3;
+}
+
+int __fastcall test4(int a)
+{
+	TRACE("%s : %d\n", __FUNCSIG__, a);
+	return a * 4;
+}
+
 //template<typename T>
 //class foo
 //{
@@ -120,29 +132,53 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	int (*test_)(int) = (int(*)(int))t1i.injection_code(test);
 	r = test(5);
-	TRACE("r=%d\n",r);
+	TRACE("test() r=%d\n",r);
 	r = test_(5);
-	TRACE("r=%d\n",r);
+	TRACE("test_() r=%d\n",r);
 
 	int (*test2_)(int) = (int(*)(int))t1i.injection_code(test2);
 	r = test2(10);
-	TRACE("r=%d\n",r);
+	TRACE("test() r=%d\n",r);
 	r = test2_(10);
-	TRACE("r=%d\n",r);
+	TRACE("test2_() r=%d\n",r);
+
+	int (__stdcall *test3_)(int) = (int(__stdcall *)(int))t1i.injection_code(test3, spplib::thunk::CALL_STDCALL);
+	r = test3(10);
+	TRACE("test3() r=%d\n",r);
+	r = test3_(10);
+	TRACE("test3_() r=%d\n",r);
+
+	int (__fastcall *test4_)(int) = (int(__fastcall *)(int))t1i.injection_code(test4, spplib::thunk::CALL_FASTCALL);
+	r = test4(10);
+	TRACE("test4() r=%d\n",r);
+	r = test4_(10);
+	TRACE("test4_() r=%d\n",r);
 
 	TRACE("----------- code uninjection test -----------\n");
 
 	t1i.uninjection_code(test, test_);
 	r = test(5);
-	TRACE("r=%d\n",r);
+	TRACE("test() r=%d\n",r);
 	r = test_(5);
-	TRACE("r=%d\n",r);
+	TRACE("test_() r=%d\n",r);
 
 	t1i.uninjection_code(test2, test2_);
 	r = test2(10);
-	TRACE("r=%d\n",r);
+	TRACE("test2() r=%d\n",r);
 	r = test2_(10);
-	TRACE("r=%d\n",r);
+	TRACE("test2_() r=%d\n",r);
+
+	//t1i.uninjection_code(test3, test3_);
+	//r = test3(10);
+	//TRACE("test3() r=%d\n",r);
+	//r = test3_(10);
+	//TRACE("test3_() r=%d\n",r);
+
+	//t1i.uninjection_code(test4, test4_);
+	//r = test4(10);
+	//TRACE("test4() r=%d\n",r);
+	//r = test4_(10);
+	//TRACE("test4_() r=%d\n",r);
 
 	return 0;
 }

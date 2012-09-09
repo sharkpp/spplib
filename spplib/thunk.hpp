@@ -237,8 +237,8 @@ public:
 
 		u8* jmp_addr;
 
-		// 無条件 jmp や call の場合は飛び先に飛んでフック
-		while( 0xE9 == *code || 0xE8 == *code )
+		// 無条件 jmp の場合は飛び先に飛んでフック
+		while( 0xE9 == *code )
 		{
 			// 飛び先を計算
 			code  = (u8*)((u32)code + *((u32*)(code+1)) + 5);
@@ -294,8 +294,8 @@ public:
 		u8* code_= (u8*)func;
 		u8* code = code_;
 
-		// 無条件 jmp や call の場合は飛び先に飛んでフック
-		while( 0xE9 == *code_ || 0xE8 == *code_ )
+		// 無条件 jmp の場合は飛び先に飛んでフック
+		while( 0xE9 == *code_ )
 		{
 			// 飛び先を計算
 			code   = code_;

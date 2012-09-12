@@ -47,6 +47,16 @@ public:
 	}
 };
 
+int run1i(int x) {
+	TRACE("%s : %d\n", __FUNCSIG__,x);
+	return x;
+}
+
+int __stdcall run1i2(int x) {
+	TRACE("%s : %d\n", __FUNCSIG__,x);
+	return x;
+}
+
 int test(int a)
 {
 	TRACE("%s : %d\n", __FUNCSIG__, a);
@@ -109,6 +119,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	spplib::thunk t1t(&v1, &test1::run1t);
 	spplib::thunk t1ct(&v1, &test1::run1ct);
 
+	spplib::thunk t1i_(&run1i);
+//	spplib::thunk t1i_2(&run1i2);
+
 	v1.run1v(123);
 	v1.run1v(123);
 
@@ -122,6 +135,9 @@ int _tmain(int argc, _TCHAR* argv[])
 	int (*p1t)(TXX) = (int (*)(TXX))t1t.get_code();
 	int (*p1ct)(const TXX&) = (int (*)(const TXX&))t1ct.get_code();
 
+	int (*p1i_)(int)= (int (*)(int))t1i_.get_code();
+//	int (*p1i_2)(int)= (int (*)(int))t1i_2.get_code();
+
 	int r;
 
 	    p0v();
@@ -133,6 +149,12 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	r = p1i(123);
 	TRACE("r=%d\n",r);
+
+	r = p1i_(123);
+	TRACE("r=%d\n",r);
+
+	//r = p1i_2(123);
+	//TRACE("r=%d\n",r);
 
 	TXX x ={111,222};
 	r = p1t(x);
